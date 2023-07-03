@@ -1,7 +1,7 @@
 use digest::dev::{feed_rand_16mib, fixed_reset_test};
 use digest::new_test;
 use hex_literal::hex;
-use tiger::{Digest, Tiger, Tiger2};
+use tiger::{Digest, Tiger, Tiger2, TigerTree};
 
 new_test!(tiger, "tiger", tiger::Tiger, fixed_reset_test);
 new_test!(tiger2, "tiger2", tiger::Tiger2, fixed_reset_test);

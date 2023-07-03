@@ -34,6 +34,8 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs, rust_2018_idioms)]
 
+extern crate alloc;
+
 pub use digest::{self, Digest};
 
 use core::fmt;
@@ -50,6 +52,9 @@ use digest::{
 mod compress;
 mod tables;
 use compress::compress;
+
+mod tth;
+use tth::TigerTreeCore;
 
 type State = [u64; 3];
 const S0: State = [
@@ -181,11 +186,7 @@ impl Default for Tiger2Core {
     fn default() -> Self {
         Self {
             block_len: 0,
-            state: [
-                0x0123_4567_89AB_CDEF,
-                0xFEDC_BA98_7654_3210,
-                0xF096_A5B4_C3B2_E187,
-            ],
+            state: S0,
         }
     }
 }
@@ -209,7 +210,9 @@ impl fmt::Debug for Tiger2Core {
     }
 }
 
-/// Tiger hasher state.
+/// Tiger hasher.
 pub type Tiger = CoreWrapper<TigerCore>;
-/// Tiger2 hasher state.
+/// Tiger2 hasher.
 pub type Tiger2 = CoreWrapper<Tiger2Core>;
+/// TTH hasher.
+pub type TigerTree = CoreWrapper<TigerTreeCore>;
