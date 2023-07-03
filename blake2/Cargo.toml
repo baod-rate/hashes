@@ -1,6 +1,6 @@
 [package]
 name = "blake2"
-version = "0.10.4" # Also update html_root_url in lib.rs when bumping this
+version = "0.10.6"
 description = "BLAKE2 hash functions"
 authors = ["RustCrypto Developers"]
 license = "MIT OR Apache-2.0"
@@ -12,10 +12,10 @@ keywords = ["crypto", "blake2", "hash", "digest"]
 categories = ["cryptography", "no-std"]
 
 [dependencies]
-digest = { version = "0.10.3", features = ["mac"] }
+digest = { version = "0.10.7", features = ["mac"] }
 
 [dev-dependencies]
-digest = { version = "0.10.3", features = ["dev"] }
+digest = { version = "0.10.7", features = ["dev"] }
 hex-literal = "0.2.2"
 
 [features]
@@ -25,3 +25,4 @@ reset = [] # Enable reset functionality
 simd = []
 simd_opt = ["simd"]
 simd_asm = ["simd_opt"]
+size_opt = [] # Optimize for code size. Removes some `inline(always)`

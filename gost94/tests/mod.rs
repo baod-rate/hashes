@@ -1,6 +1,8 @@
+#[cfg(feature = "oid")]
+use digest::const_oid::{AssociatedOid, ObjectIdentifier};
 use digest::dev::{feed_rand_16mib, fixed_reset_test};
 use digest::new_test;
-use gost94::{Digest, Gost94CryptoPro, Gost94Test};
+use gost94::{Digest, Gost94CryptoPro, Gost94Test, Gost94UA};
 use hex_literal::hex;
 
 new_test!(gost94_test_main, "test", Gost94Test, fixed_reset_test);
@@ -80,4 +82,27 @@ fn arithmetic_overflow_regression() {
     let mut h = Gost94Test::default();
     h.update(&include_bytes!("data/arithmetic_overflow.bin")[..]);
     h.finalize().as_slice();
+}
+
+#[test]
+fn gost_ua_engine_tests() {
+    let mut h = Gost94UA::new();
+    h.update(b"test");
+    assert_eq!(
+        h.finalize_reset().as_slice(),
+        hex!("7c536414f8b5b9cc649fdf3cccb2685c1a12622956308e34f31c50ed7b3af56c"),
+    );
+}
+
+#[cfg(feature = "oid")]
+#[test]
+fn gost_oid_tests() {
+    assert_eq!(
+        Gost94CryptoPro::OID,
+        ObjectIdentifier::new_unwrap("1.2.643.2.2.9")
+    );
+    assert_eq!(
+        Gost94UA::OID,
+        ObjectIdentifier::new_unwrap("1.2.804.2.1.1.1.1.2.1")
+    );
 }

@@ -4,7 +4,7 @@
 
 Collection of [cryptographic hash functions][1] written in pure Rust.
 
-All algorithms reside in the separate crates and implemented using traits from [`digest`] crate.
+All algorithms reside in separate crates and are implemented using traits from [`digest`] crate.
 Additionally all crates do not require the standard library (i.e. `no_std` capable) and can be easily used for bare-metal or WebAssembly programming.
 
 ## Supported Algorithms
@@ -13,10 +13,13 @@ Additionally all crates do not require the standard library (i.e. `no_std` capab
 
 | Algorithm | Crate | Crates.io | Documentation | MSRV | [Security] |
 |-----------|-------|:---------:|:-------------:|:----:|:----------:|
+| [Ascon] hash | [`ascon‑hash`] | [![crates.io](https://img.shields.io/crates/v/ascon-hash.svg)](https://crates.io/crates/ascon-hash) | [![Documentation](https://docs.rs/ascon-hash/badge.svg)](https://docs.rs/ascon-hash) | ![MSRV 1.56][msrv-1.56] | :green_heart: |
+| [BelT] hash | [`belt‑hash`] | [![crates.io](https://img.shields.io/crates/v/belt-hash.svg)](https://crates.io/crates/belt-hash) | [![Documentation](https://docs.rs/belt-hash/badge.svg)](https://docs.rs/belt-hash) | ![MSRV 1.57][msrv-1.57] | :green_heart: |
 | [BLAKE2] | [`blake2`] | [![crates.io](https://img.shields.io/crates/v/blake2.svg)](https://crates.io/crates/blake2) | [![Documentation](https://docs.rs/blake2/badge.svg)](https://docs.rs/blake2) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
 | [FSB] | [`fsb`] | [![crates.io](https://img.shields.io/crates/v/fsb.svg)](https://crates.io/crates/fsb) | [![Documentation](https://docs.rs/fsb/badge.svg)](https://docs.rs/fsb) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
 | [GOST R 34.11-94][GOST94] | [`gost94`] | [![crates.io](https://img.shields.io/crates/v/gost94.svg)](https://crates.io/crates/gost94) | [![Documentation](https://docs.rs/gost94/badge.svg)](https://docs.rs/gost94) | ![MSRV 1.41][msrv-1.41] | :yellow_heart: |
 | [Grøstl] (Groestl) | [`groestl`] | [![crates.io](https://img.shields.io/crates/v/groestl.svg)](https://crates.io/crates/groestl) | [![Documentation](https://docs.rs/groestl/badge.svg)](https://docs.rs/groestl) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
+| [JH] | [`jh`] | [![crates.io](https://img.shields.io/crates/v/jh.svg)](https://crates.io/crates/jh) | [![Documentation](https://docs.rs/jh/badge.svg)](https://docs.rs/jh) | ![MSRV 1.57][msrv-1.57] | :green_heart: |
 | [KangarooTwelve] | [`k12`] | [![crates.io](https://img.shields.io/crates/v/k12.svg)](https://crates.io/crates/k12) | [![Documentation](https://docs.rs/k12/badge.svg)](https://docs.rs/k12) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
 | [MD2] | [`md2`] | [![crates.io](https://img.shields.io/crates/v/md2.svg)](https://crates.io/crates/md2) | [![Documentation](https://docs.rs/md2/badge.svg)](https://docs.rs/md2) | ![MSRV 1.41][msrv-1.41] | :broken_heart: |
 | [MD4] | [`md4`] | [![crates.io](https://img.shields.io/crates/v/md4.svg)](https://crates.io/crates/md4) | [![Documentation](https://docs.rs/md4/badge.svg)](https://docs.rs/md4) | ![MSRV 1.41][msrv-1.41] | :broken_heart: |
@@ -26,6 +29,7 @@ Additionally all crates do not require the standard library (i.e. `no_std` capab
 | [SHA-2] | [`sha2`] | [![crates.io](https://img.shields.io/crates/v/sha2.svg)](https://crates.io/crates/sha2) | [![Documentation](https://docs.rs/sha2/badge.svg)](https://docs.rs/sha2) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
 | [SHA-3] (Keccak) | [`sha3`] | [![crates.io](https://img.shields.io/crates/v/sha3.svg)](https://crates.io/crates/sha3) | [![Documentation](https://docs.rs/sha3/badge.svg)](https://docs.rs/sha3) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
 | [SHABAL] | [`shabal`] | [![crates.io](https://img.shields.io/crates/v/shabal.svg)](https://crates.io/crates/shabal) | [![Documentation](https://docs.rs/shabal/badge.svg)](https://docs.rs/shabal) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
+| [Skein] | [`skein`] | [![crates.io](https://img.shields.io/crates/v/skein.svg)](https://crates.io/crates/skein) | [![Documentation](https://docs.rs/skein/badge.svg)](https://docs.rs/skein) | ![MSRV 1.57][msrv-1.57] | :green_heart: |
 | [SM3] (OSCCA GM/T 0004-2012) | [`sm3`] | [![crates.io](https://img.shields.io/crates/v/sm3.svg)](https://crates.io/crates/sm3) | [![Documentation](https://docs.rs/sm3/badge.svg)](https://docs.rs/sm3) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
 | [Streebog] (GOST R 34.11-2012) | [`streebog`] | [![crates.io](https://img.shields.io/crates/v/streebog.svg)](https://crates.io/crates/streebog) | [![Documentation](https://docs.rs/streebog/badge.svg)](https://docs.rs/streebog) | ![MSRV 1.41][msrv-1.41] | :yellow_heart: |
 | [Tiger] | [`tiger`] | [![crates.io](https://img.shields.io/crates/v/tiger.svg)](https://crates.io/crates/tiger) | [![Documentation](https://docs.rs/tiger/badge.svg)](https://docs.rs/tiger) | ![MSRV 1.41][msrv-1.41] | :green_heart: |
@@ -50,14 +54,14 @@ See the [Security] page on Wikipedia for more information.
 
 ### Crate Names
 
-Whenever possible crates are published under the the same name as the crate folder.
+Whenever possible crates are published under the same name as the crate folder.
 Owners of `md5` [declined](https://github.com/stainless-steel/md5/pull/) to participate in this project.
 This crate does not implement the [`digest`] traits, so it is not interoperable with the RustCrypto ecosystem.
 This is why we publish our MD5 implementation as `md-5` and mark it with the :exclamation: mark.
 Note that the library itself is named as `md5`, i.e. inside `use` statements you should use `md5`, not `md_5`.
 
 The SHA-1 implementation was previously published as `sha-1`, but migrated to `sha1` since v0.10.0.
-`sha-1` will continue to recieve v0.10.x patch updates, but will be deprecated after `sha1` v0.11 release.
+`sha-1` will continue to receive v0.10.x patch updates, but will be deprecated after `sha1` v0.11 release.
 
 ### Minimum Supported Rust Version (MSRV) Policy
 
@@ -132,7 +136,7 @@ let hash = Sha256::digest(b"my message");
 
 ### Hashing `Read`able Objects
 
-If you want to hash data from a type which imlements the [`Read`] trait, you can rely on implementation of the [`Write`] trait (requires enabled-by-default `std` feature):
+If you want to hash data from a type which implements the [`Read`] trait, you can rely on implementation of the [`Write`] trait (requires enabled-by-default `std` feature):
 
 ```rust
 use sha2::{Sha256, Digest};
@@ -175,20 +179,38 @@ hash_password::<Sha512>("my_password", "abcd", &mut buf2);
 If you want to use hash functions with trait objects, you can use the [`DynDigest`] trait:
 
 ```rust
-use sha2::{Sha256, Sha512, digest::DynDigest};
+use digest::DynDigest;
 
-fn dyn_hash(hasher: &mut dyn DynDigest, data: &[u8]) -> Box<[u8]> {
+// Dynamic hash function
+fn use_hasher(hasher: &mut dyn DynDigest, data: &[u8]) -> Box<[u8]> {
     hasher.update(data);
     hasher.finalize_reset()
 }
 
-let mut sha256_hasher = Sha256::default();
-let mut sha512_hasher = Sha512::default();
+// You can use something like this when parsing user input, CLI arguments, etc.
+// DynDigest needs to be boxed here, since function return should be sized.
+fn select_hasher(s: &str) -> Box<dyn DynDigest> {
+    match s {
+        "md5" => Box::new(md5::Md5::default()),
+        "sha1" => Box::new(sha1::Sha1::default()),
+        "sha224" => Box::new(sha2::Sha224::default()),
+        "sha256" => Box::new(sha2::Sha256::default()),
+        "sha384" => Box::new(sha2::Sha384::default()),
+        "sha512" => Box::new(sha2::Sha512::default()),
+        _ => unimplemented!("unsupported digest: {}", s),
+    }
+}
 
-let hash1 = dyn_hash(&mut sha256_hasher, b"foo");
-let hash2 = dyn_hash(&mut sha256_hasher, b"bar");
-let hash3 = dyn_hash(&mut sha512_hasher, b"foo");
-let hash4 = dyn_hash(&mut sha512_hasher, b"bar");
+let mut hasher1 = select_hasher("md5");
+let mut hasher2 = select_hasher("sha512");
+
+// the `&mut *hasher` is to DerefMut the value out of the Box
+// this is equivalent to `DerefMut::deref_mut(&mut hasher)`
+
+// can be reused due to `finalize_reset()`
+let hash1_1 = use_hasher(&mut *hasher1, b"foo");
+let hash1_2 = use_hasher(&mut *hasher1, b"bar");
+let hash2_1 = use_hasher(&mut *hasher2, b"foo");
 ```
 
 ## License
@@ -212,13 +234,18 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [deps-image]: https://deps.rs/repo/github/RustCrypto/hashes/status.svg
 [deps-link]: https://deps.rs/repo/github/RustCrypto/hashes
 [msrv-1.41]: https://img.shields.io/badge/rustc-1.41.0+-blue.svg
+[msrv-1.56]: https://img.shields.io/badge/rustc-1.56.0+-blue.svg
+[msrv-1.57]: https://img.shields.io/badge/rustc-1.57.0+-blue.svg
 
 [//]: # (crates)
 
+[`ascon‑hash`]: ./ascon-hash
+[`belt‑hash`]: ./belt-hash
 [`blake2`]: ./blake2
 [`fsb`]: ./fsb
 [`gost94`]: ./gost94
 [`groestl`]: ./groestl
+[`jh`]: ./jh
 [`k12`]: ./k12
 [`md2`]: ./md2
 [`md4`]: ./md4
@@ -228,6 +255,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [`sha2`]: ./sha2
 [`sha3`]: ./sha3
 [`shabal`]: ./shabal
+[`skein`]: ./skein
 [`sm3`]: ./sm3
 [`streebog`]: ./streebog
 [`tiger`]: ./tiger
@@ -252,10 +280,13 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 
 [//]: # (algorithms)
 
+[Ascon]: https://ascon.iaik.tugraz.at
+[BelT]: https://ru.wikipedia.org/wiki/BelT
 [BLAKE2]: https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2
 [FSB]: https://en.wikipedia.org/wiki/Fast_syndrome-based_hash
 [GOST94]: https://en.wikipedia.org/wiki/GOST_(hash_function)
 [Grøstl]: https://en.wikipedia.org/wiki/Grøstl
+[JH]: https://www3.ntu.edu.sg/home/wuhj/research/jh
 [KangarooTwelve]: https://keccak.team/kangarootwelve.html
 [MD2]: https://en.wikipedia.org/wiki/MD2_(cryptography)
 [MD4]: https://en.wikipedia.org/wiki/MD4
@@ -265,6 +296,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [SHA-2]: https://en.wikipedia.org/wiki/SHA-2
 [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
 [SHABAL]: https://www.cs.rit.edu/~ark/20090927/Round2Candidates/Shabal.pdf
+[Skein]: https://schneier.com/academic/skein
 [SM3]: https://en.wikipedia.org/wiki/SM3_(hash_function)
 [Streebog]: https://en.wikipedia.org/wiki/Streebog
 [Whirlpool]: https://en.wikipedia.org/wiki/Whirlpool_(cryptography)

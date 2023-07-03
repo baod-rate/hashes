@@ -23,16 +23,15 @@
 //! ")[..]);
 //! ```
 //!
-//! Also see [RustCrypto/hashes][2] readme.
+//! Also see [RustCrypto/hashes] readme.
 //!
-//! [1]: https://zh.wikipedia.org/zh-hans/SM3
-//! [2]: https://github.com/RustCrypto/hashes
+//! [SM3]: https://en.wikipedia.org/wiki/SM3_(hash_function)
+//! [RustCrypto/hashes]: https://github.com/RustCrypto/hashes
 
 #![no_std]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
-    html_root_url = "https://docs.rs/sm3/0.4.1"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
 #![forbid(unsafe_code)]
 #![warn(missing_docs, rust_2018_idioms)]
