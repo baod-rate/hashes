@@ -1,23 +1,89 @@
 use core::fmt;
-use digest::{block_buffer::{BlockBuffer, Eager}, core_api::{
-    AlgorithmName, Block, BlockSizeUser, Buffer, BufferKindUser, FixedOutputCore,
-    OutputSizeUser, Reset, UpdateCore,
-}, typenum::Unsigned, HashMarker, Output};
 use data_encoding::BASE32;
+use digest::{
+    block_buffer::{BlockBuffer, Eager},
+    core_api::{
+        AlgorithmName, Block, BlockSizeUser, Buffer, BufferKindUser, FixedOutputCore,
+        OutputSizeUser, Reset, UpdateCore,
+    },
+    typenum::Unsigned,
+    HashMarker, Output,
+};
 
-use alloc::vec::Vec;
-use core::iter::FromIterator;
-use digest::Digest;
-use digest::core_api::CoreWrapper;
-use crate::{TigerCore, State, S0};
 use crate::compress::compress;
+use crate::{State, TigerCore, S0};
+use alloc::vec::Vec;
+use digest::core_api::CoreWrapper;
+use digest::Digest;
 
 /// Core Tiger hasher state.
 #[derive(Clone)]
 pub struct TigerTreeCore {
     leaves: Vec<[u8; 24]>,
-    block_len: u64,
+    block_len: usize,
     state: State,
+}
+
+impl TigerTreeCore {
+    #[inline]
+    fn update_data(&mut self, data: &[u8]) {}
+
+    #[inline]
+    fn update_block(&mut self, block: &Block<Self>) {
+        self.update_data(block.as_slice());
+        self.block_len += 1;
+        compress(&mut self.state, block.as_ref());
+
+        match self.block_len * <Self as BlockSizeUser>::BlockSize::USIZE {
+            0 => {
+                todo!("prefix w/ 0x00 and add")
+            }
+            1..=1023 => {
+                todo!("add data")
+            }
+            1024 => {
+                todo!("compress data block")
+            }
+            _ => unreachable!(),
+        }
+
+        // data blocks are 1024B in size
+        // if let 128 = self.block_len {
+        if let 1024 = self.block_len * <Self as BlockSizeUser>::BlockSize::USIZE {
+            // leaf node content is hashed data block prefixed with 0x00
+            // TODO:
+            // let mut content = [LEAF_SIG; 25];
+
+            // leaf node content is hash of data block prefixed with 0x00
+            let mut buffer: Buffer<TigerCore> = BlockBuffer::<
+                <TigerCore as BlockSizeUser>::BlockSize,
+                <TigerCore as BufferKindUser>::BufferKind,
+            >::new(&[LEAF_SIG]);
+
+            self.state = S0;
+            let bs = <TigerTreeCore as BlockSizeUser>::BlockSize::U64 as u64;
+            let pos = buffer.get_pos() as u64;
+            let bit_len = 8 * (pos + bs * self.block_len as u64);
+            buffer.len64_padding_le(bit_len, |b| compress(&mut self.state, b.as_ref()));
+
+            // store hash of content as a leaf
+            let hash = {
+                let mut hash = [0; 24];
+                for (chunk, v) in hash[..].chunks_exact_mut(8).zip(self.state.iter()) {
+                    chunk.copy_from_slice(&v.to_le_bytes());
+                }
+                hash
+            };
+            self.leaves.push(hash);
+
+            // reset hasher
+            self.state = S0;
+            self.block_len = 0;
+        }
+
+        // TODO:
+        // println!("update_block(): {}", BASE32.encode(block));
+    }
 }
 
 const LEAF_SIG: u8 = 0u8;
@@ -41,52 +107,8 @@ impl UpdateCore for TigerTreeCore {
     #[inline]
     fn update_blocks(&mut self, blocks: &[Block<Self>]) {
         for block in blocks {
-            self.block_len += 1;
-            compress(&mut self.state, block.as_ref());
-
-            if let 128 = self.block_len {
-                // leaf node content is hashed data block prefixed with 0x00
-                // TODO:
-                // let mut content = [LEAF_SIG; 25];
-
-                // TODO:
-                let content: Vec<u8> = Vec::from_iter(
-                    [LEAF_SIG]
-                        .iter()
-                        .copied()
-                        .chain(
-                            self.state
-                                .iter()
-                                .flat_map(|x| x.to_le_bytes())
-                        )
-                );
-                let mut buffer: Buffer<TigerCore> = BlockBuffer::<
-                    <TigerCore as BlockSizeUser>::BlockSize,
-                    <TigerCore as BufferKindUser>::BufferKind
-                >::new(&content[..]);
-
-                self.state = S0;
-                let bs = Self::BlockSize::U64 as u64;
-                let pos = buffer.get_pos() as u64;
-                let bit_len = 8 * (pos + bs * self.block_len);
-                buffer.len64_padding_le(
-                    bit_len,
-                    |b| compress(&mut self.state, b.as_ref())
-                );
-
-                let mut hash = [0; 24];
-                for (chunk, v) in hash[..].chunks_exact_mut(8).zip(self.state.iter()) {
-                    chunk.copy_from_slice(&v.to_le_bytes());
-                }
-                self.leaves.push(hash);
-
-                // reset hasher
-                self.state = S0;
-                self.block_len = 0;
-            }
+            self.update_block(block)
         }
-
-        // println!("update_block(): {}", BASE32.encode(block));
     }
 }
 
@@ -94,8 +116,31 @@ impl FixedOutputCore for TigerTreeCore {
     #[inline]
     fn finalize_fixed_core(&mut self, buffer: &mut Buffer<Self>, out: &mut Output<Self>) {
         match buffer.get_pos() {
-            0 => { },
+            0 => {}
             _ => {
+                let hash = {
+                    let mut hash = [0; 24];
+
+                    let bs = <TigerTreeCore as BlockSizeUser>::BlockSize::U64 as u64;
+                    let pos = buffer.get_pos() as u64;
+                    let bit_len = 8 * (pos + bs * self.block_len as u64);
+                    buffer.len64_padding_le(bit_len, |b| compress(&mut self.state, b.as_ref()));
+                    for (chunk, v) in hash[..].chunks_exact_mut(8).zip(self.state.iter()) {
+                        chunk.copy_from_slice(&v.to_le_bytes());
+                    }
+                    hash
+                };
+
+                self.state = S0;
+                self.block_len = 0;
+
+                let bs = Self::BlockSize::U64 as u64;
+                let pos = buffer.get_pos() as u64;
+                let bit_len = 8 * (pos + bs * self.block_len as u64);
+
+                buffer.len64_padding_le(bit_len, |b| compress(&mut self.state, b.as_ref()));
+                self.leaves.push(hash);
+
                 self.leaves.push([0; 24]
                     // TODO:
                     // Tiger::new()
@@ -128,9 +173,7 @@ fn hash_nodes(hashes: &[[u8; 24]]) -> [u8; 24] {
         // 0 => Tiger::digest(&[0u8]).try_into().expect("wrong size"),
         0 => [0; 24],
         _ => {
-            let left_hashes  = hashes
-                .into_iter()
-                .step_by(2);
+            let left_hashes = hashes.into_iter().step_by(2);
 
             let right_hashes = hashes
                 .into_iter()
@@ -139,9 +182,9 @@ fn hash_nodes(hashes: &[[u8; 24]]) -> [u8; 24] {
                 .skip(1)
                 .step_by(2);
 
-            let foo: Vec<[u8; 24]> = left_hashes.zip(right_hashes)
-                .map(|(left, right)|
-                    match right {
+            let foo: Vec<[u8; 24]> = left_hashes
+                .zip(right_hashes)
+                .map(|(left, right)| match right {
                         Some(right) => {
                             // [0; 24]
 
@@ -176,8 +219,7 @@ fn hash_nodes(hashes: &[[u8; 24]]) -> [u8; 24] {
                         // TODO:
                         // _ => Output::<TigerCore>::from(left)
                         // _ => *left,
-                    }
-                )
+                    })
                 .collect();
 
             return hash_nodes(foo.as_slice());

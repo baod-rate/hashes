@@ -13,6 +13,7 @@ categories = ["cryptography", "no-std"]
 
 [dependencies]
 digest = "0.10.3"
+data-encoding = "2.3.2"
 
 [dev-dependencies]
 digest = { version = "0.10.3", features = ["dev"] }

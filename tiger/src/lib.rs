@@ -25,7 +25,7 @@
 //! [1]: https://en.wikipedia.org/wiki/Tiger_(hash_function)
 //! [2]: https://github.com/RustCrypto/hashes
 
-#![no_std]
+// #![no_std]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -35,6 +35,7 @@
 #![warn(missing_docs, rust_2018_idioms)]
 
 extern crate alloc;
+extern crate core;
 
 pub use digest::{self, Digest};
 
