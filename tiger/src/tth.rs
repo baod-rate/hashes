@@ -1,6 +1,9 @@
+use crate::{Digest, Tiger, TigerCore};
+use alloc::vec::Vec;
 use core::fmt;
-// use data_encoding::BASE32;
+use core::mem::swap;
 use digest::{
+    core_api::CoreWrapper,
     core_api::{
         AlgorithmName, Block, BlockSizeUser, Buffer, BufferKindUser, FixedOutputCore,
         OutputSizeUser, Reset, UpdateCore,
@@ -10,24 +13,34 @@ use digest::{
     HashMarker, Output,
 };
 
-use crate::{TigerCore, Tiger, Digest};
-use alloc::vec::Vec;
-use data_encoding::BASE32;
-use digest::core_api::CoreWrapper;
-
 /// Core Tiger hasher state.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct TigerTreeCore {
     leaves: Vec<Output<TigerCore>>,
+    hasher: Tiger,
+    blocks_processed: usize,
 }
 
+impl Default for TigerTreeCore {
+    fn default() -> Self {
+        Self {
+            leaves: Vec::default(),
+            hasher: Tiger::new_with_prefix([LEAF_SIG]),
+            blocks_processed: 0,
+        }
+    }
+}
+
+type DataBlockSize = U1024;
 const LEAF_SIG: u8 = 0u8;
 const NODE_SIG: u8 = 1u8;
+const DATA_BLOCKS_PER_LEAF: usize =
+    DataBlockSize::USIZE / <TigerCore as BlockSizeUser>::BlockSize::USIZE;
 
 impl HashMarker for TigerTreeCore {}
 
 impl BlockSizeUser for TigerTreeCore {
-    type BlockSize = U1024;
+    type BlockSize = <TigerCore as BlockSizeUser>::BlockSize;
 }
 
 impl BufferKindUser for TigerTreeCore {
@@ -38,24 +51,19 @@ impl OutputSizeUser for TigerTreeCore {
     type OutputSize = <TigerCore as OutputSizeUser>::OutputSize;
 }
 
-impl TigerTreeCore {
-    #[inline]
-    fn update_block(&mut self, block: &Block<Self>) {
-        let mut hasher = Tiger::new();
-        let data: Vec<u8> = [&[LEAF_SIG], block.as_slice()].concat();
-        hasher.update(data);
-        let hash = hasher.finalize();
-        // TODO:
-        println!("update_block(): {}", BASE32.encode(&hash));
-        self.leaves.push(hash);
-    }
-}
-
 impl UpdateCore for TigerTreeCore {
     #[inline]
     fn update_blocks(&mut self, blocks: &[Block<Self>]) {
         for block in blocks {
-            self.update_block(block)
+            self.hasher.update(block);
+            self.blocks_processed += 1;
+            if self.blocks_processed == DATA_BLOCKS_PER_LEAF {
+                let mut hasher = Tiger::new_with_prefix([LEAF_SIG]);
+                swap(&mut self.hasher, &mut hasher);
+                let hash = hasher.finalize();
+                self.leaves.push(hash);
+                self.blocks_processed = 0;
+            }
         }
     }
 }
@@ -66,9 +74,19 @@ impl FixedOutputCore for TigerTreeCore {
         match buffer.get_pos() {
             0 => {}
             _ => {
-                let data: Vec<u8> = [&[LEAF_SIG], buffer.get_data()].concat();
-                let hash = Tiger::digest(data);
+                self.hasher.update(buffer.get_data());
+                self.blocks_processed += 1;
+            }
+        }
+
+        match self.blocks_processed {
+            0 => {}
+            _ => {
+                let mut hasher = Tiger::new_with_prefix([LEAF_SIG]);
+                swap(&mut self.hasher, &mut hasher);
+                let hash = hasher.finalize();
                 self.leaves.push(hash);
+                self.blocks_processed = 0;
             }
         }
 
@@ -78,67 +96,39 @@ impl FixedOutputCore for TigerTreeCore {
 }
 
 fn hash_nodes(hashes: &[Output<TigerCore>]) -> Output<TigerCore> {
-    println!("hashes: {} nodes", hashes.len());
-    for hash in hashes {
-        println!("{}", BASE32.encode(hash));
-    }
-
     match hashes.len() {
-        // 0 => Tiger::digest(&[0u8]).try_into().expect("wrong size"),
-        0 => {
-            let hash = CoreWrapper::<TigerCore>::digest([LEAF_SIG]);
-            hash_nodes(&[hash])
-        }
+        0 => hash_nodes(&[Tiger::digest([LEAF_SIG])]),
         1 => hashes[0],
         _ => {
             let left_hashes = hashes.iter().step_by(2);
 
-            let right_hashes = hashes
-                .iter()
-                .map(Some)
-                .chain([None])
-                .skip(1)
-                .step_by(2);
+            let right_hashes = hashes.iter().map(Some).skip(1).chain([None]).step_by(2);
 
             let next_level_hashes: Vec<Output<TigerCore>> = left_hashes
                 .zip(right_hashes)
                 .map(|(left, right)| match right {
-                        Some(right) => {
-                            // [0; 24]
-
-                            // let content: Vec<u8> = Vec::from_iter(
-                            //     [LEAF_SIG]
-                            //     .into_iter()
-                            //     .copied()
-                            //     .chain(
-                            //         self.state
-                            //         .iter()
-                            //         .flat_map(|x| x.to_le_bytes())
-                            //     )
-                            // );
-
-                            let content = {
-                                const LEAF_CONTENT_SIZE: usize = <TigerCore as OutputSizeUser>::OutputSize::USIZE * 2 + 1;
-                                let mut leaf_content = [0; LEAF_CONTENT_SIZE];
-                                let (sig, contents) = leaf_content.split_at_mut(1);
-                                sig.copy_from_slice(&[NODE_SIG]);
-                                let (left_split, right_split) = contents.split_at_mut(<TigerCore as OutputSizeUser>::OutputSize::USIZE);
-                                left_split.copy_from_slice(left);
-                                right_split.copy_from_slice(right);
-                                leaf_content
-                            };
-                            CoreWrapper::<TigerCore>::digest(content)
-                        },
-                        None => *left,
-                    })
+                    Some(right) => {
+                        let content = {
+                            let mut leaf_content =
+                                [0; <TigerCore as OutputSizeUser>::OutputSize::USIZE * 2 + 1];
+                            let (sig, contents) = leaf_content.split_at_mut(1);
+                            sig.copy_from_slice(&[NODE_SIG]);
+                            let (left_split, right_split) = contents
+                                .split_at_mut(<TigerCore as OutputSizeUser>::OutputSize::USIZE);
+                            left_split.copy_from_slice(left);
+                            right_split.copy_from_slice(right);
+                            leaf_content
+                        };
+                        CoreWrapper::<TigerCore>::digest(content)
+                    }
+                    None => *left,
+                })
                 .collect();
 
             return hash_nodes(next_level_hashes.as_slice());
         }
     }
 }
-
-
 
 impl Reset for TigerTreeCore {
     #[inline]
