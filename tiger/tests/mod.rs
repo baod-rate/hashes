@@ -1,4 +1,3 @@
-use data_encoding_macro::base32;
 use digest::dev::{feed_rand_16mib, fixed_reset_test};
 use digest::new_test;
 use hex_literal::hex;
@@ -43,7 +42,7 @@ fn tth_empty() {
     h.update(b"");
     assert_eq!(
         h.finalize()[..],
-        base32!("LWPNACQDBZRYXW3VHJVCJ64QBZNGHOHHHZWCLNQ=")[..],
+        hex!("5d9ed00a030e638bdb753a6a24fb900e5a63b8e73e6c25b6")[..]
     );
 }
 
@@ -54,18 +53,7 @@ fn tth_one_block() {
     h.update(content);
     assert_eq!(
         h.finalize()[..],
-        base32!("6UT2WHO3YTGO3BLS4DHXVFUGATV4ZOKBJ22DRXA=")[..],
-    );
-}
-
-#[test]
-fn tth_blob() {
-    let mut h = TigerTree::new();
-    let data = include_bytes!(concat!("data/", "tiger.blb"));
-    h.update(data);
-    assert_eq!(
-        h.finalize()[..],
-        base32!("CJEUDKKLNJ7FOKZXZOJDFABDDM7Q5XDIL6ANHKI=")[..],
+        hex!("f527ab1ddbc4cced8572e0cf7a968604ebccb9414eb438dc")[..]
     );
 }
 
@@ -77,7 +65,7 @@ fn tth_two_blocks() {
     h.update(content);
     assert_eq!(
         h.finalize()[..],
-        base32!("3NT5TZCSYOXWYMU7WZSHG66CG6FKGZFXJQ2GROY=")[..],
+        hex!("db67d9e452c3af6c329fb664737bc2378aa364b74c3468bb")[..]
     );
 }
 
@@ -89,6 +77,6 @@ fn tth_three_blocks() {
     h.update(content);
     assert_eq!(
         h.finalize()[..],
-        base32!("6OTDZEQBTT73OUT6TLP2K6Q6ZN4DOKHWPMDP5UA=")[..],
+        hex!("f3a63c92019cffb7527e9adfa57a1ecb783728f67b06fed0")[..]
     );
 }

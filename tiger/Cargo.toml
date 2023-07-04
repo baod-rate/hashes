@@ -12,11 +12,9 @@ keywords = ["crypto", "hash", "tiger", "digest"]
 categories = ["cryptography", "no-std"]
 
 [dependencies]
-data-encoding = "2.4.0"
 digest = "0.10.7"
 
 [dev-dependencies]
-data-encoding-macro = "0.1.13"
 digest = { version = "0.10.7", features = ["dev"] }
 hex-literal = "0.2.2"
 

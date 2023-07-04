@@ -80,19 +80,13 @@ impl UpdateCore for TigerTreeCore {
 impl FixedOutputCore for TigerTreeCore {
     #[inline]
     fn finalize_fixed_core(&mut self, buffer: &mut Buffer<Self>, out: &mut Output<Self>) {
-        match buffer.get_pos() {
-            0 => {}
-            _ => {
-                self.hasher.update(buffer.get_data());
-                self.blocks_processed += 1;
-            }
+        if buffer.get_pos() > 0 {
+            self.hasher.update(buffer.get_data());
+            self.blocks_processed += 1;
         }
 
-        match self.blocks_processed {
-            0 => {}
-            _ => {
-                self.finalize_blocks();
-            }
+        if self.blocks_processed > 0 {
+            self.finalize_blocks()
         }
 
         let result = hash_nodes(self.leaves.as_slice());
@@ -100,6 +94,7 @@ impl FixedOutputCore for TigerTreeCore {
     }
 }
 
+#[inline]
 fn hash_nodes(hashes: &[Output<TigerCore>]) -> Output<TigerCore> {
     match hashes.len() {
         0 => hash_nodes(&[Tiger::digest([LEAF_SIG])]),
