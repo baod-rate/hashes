@@ -19,6 +19,7 @@ members = [
     "streebog",
     "tiger",
     "whirlpool",
+    "tth",
 ]
 exclude = [
     "ascon-hash",
@@ -30,3 +31,6 @@ exclude = [
 
 [profile.dev]
 opt-level = 2
+
+[profile.release]
+opt-level = 3

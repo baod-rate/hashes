@@ -34,6 +34,10 @@
 
 pub use digest::{self, Digest};
 
+mod ed2k;
+
+use ed2k::Ed2kCore;
+
 use core::{convert::TryInto, fmt};
 #[cfg(feature = "oid")]
 use digest::const_oid::{AssociatedOid, ObjectIdentifier};
@@ -132,6 +136,8 @@ impl AssociatedOid for Md4Core {
 
 /// MD4 hasher state.
 pub type Md4 = CoreWrapper<Md4Core>;
+/// eD2k hasher.
+pub type Ed2k = CoreWrapper<Ed2kCore>;
 
 fn compress(state: &mut [u32; 4], input: &Block<Md4Core>) {
     fn f(x: u32, y: u32, z: u32) -> u32 {
